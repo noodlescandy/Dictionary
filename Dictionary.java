@@ -11,10 +11,6 @@ public class Dictionary {
         for (String cmd : args) {
             dict.load(cmd);
         }
-        // debug commands TODO DELETE
-        dict.execute("load debug.txt");
-        dict.execute("list");
-
 
         // then enter interactive prompt mode
         boolean stillEntering = true;

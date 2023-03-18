@@ -104,6 +104,9 @@ public class SplayTree {
 
     // rebalance (splay)
     private void splay(Node x){
+        if (x == null) {
+            return;
+        }
         if (x.parent == null) {
             root = x;
             return;
@@ -192,7 +195,7 @@ public class SplayTree {
         System.out.println("\nCurrent Words:");
         inOrder(root);
     }
-    
+
     public void print(String start, String end){
         inOrder(root, start, end);
     }
@@ -217,35 +220,14 @@ public class SplayTree {
         inOrder(c.right, startWord, endWord);
         return false;
     }
-    
-    public String find(String word){
-        Node out = find(word, true);
-        return out == null ? word + " not found." : out.word + ": " + out.getDefinitions();
-    }
 
-    public Node find(String word, boolean notListing) {
+    public String find(String word) {
         Node current = root;
-        Node parent = null;
         while (current != null && !current.word.equals(word)) {
-            if (comesBefore(current.word, word)) {
-                parent = current;
-                current = current.left;
-            }
-            else{
-                parent = current;
-                current = current.right;
-            }
+            current = comesBefore(current.word, word) ? current.left : current.right;
         }
-        if (current != null) {
-            if (notListing) {
-                splay(current);
-            }
-            return current;
-        }
-        if (notListing) {
-            return null;
-        }
-        return parent; // closest word
+        splay(current);
+        return current == null ? word + " not found." : current.word + ": " + current.getDefinitions();
     }
 
     /**
