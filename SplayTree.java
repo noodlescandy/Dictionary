@@ -4,14 +4,41 @@ public class SplayTree {
         private Node left;
         private Node right;
         private String word;
-        private String definition;
+        private Definition definition;
 
-        public Node(SplayTree.Node parent, SplayTree.Node left, SplayTree.Node right, String word, String definition) {
+        public Node(Node parent, Node left, Node right, String word, String def) {
             this.parent = parent;
             this.left = left;
             this.right = right;
             this.word = word;
-            this.definition = definition;
+            this.definition = new Definition(null, def);
+        }
+        public void addDefinition(String def){
+            Definition current = definition;
+            while (current.next != null) {
+                current = current.next;
+            }
+            current.next = new Definition(null, def);
+        }
+        public String getDefinitions(){
+            if (definition.next == null) {
+                return definition.words;
+            }
+            String out = "";
+            Definition current = definition;
+            while (current != null) {
+                out += "\n - " + current.words;
+                current = current.next;
+            }
+            return out;
+        }
+    }
+    class Definition{
+        private String words;
+        private Definition next;
+        public Definition(Definition next, String definition){
+            this.next = next;
+            words = definition;
         }
     }
     private Node root;
@@ -27,15 +54,20 @@ public class SplayTree {
         }
         Node current = root;
         while (true) {
-            int c = current.word.compareTo(key);
-            if (c > 0) {
+            if (current.word.equals(key)) {
+                current.addDefinition(definition);
+                splay(current);
+                return;
+            }
+            if (comesBefore(current.word, key)) {
                 if (current.left == null) {
                     current.left = new Node(current, null, null, key, definition);
                     splay(current.left);
                     return;
                 }
                 current = current.left;
-            } else {
+            } 
+            else{
                 if (current.right == null) {
                     current.right = new Node(current, null, null, key, definition);
                     splay(current.right);
@@ -143,65 +175,93 @@ public class SplayTree {
         p.parent = x;
     }
 
-    public void print(){
-        System.out.println("words:");
-        inOrder(root, "");
+    public void preOrder(){
+        preOrder(root, "");
     }
 
-    private void inOrder(Node c, String s){
+    private void preOrder(Node c, String s){
         if (c == null) {
             return;
         }
-        inOrder(c.left, s + "   ");
-        System.out.println(s + c.word + ": " + c.definition);
-        inOrder(c.right, s + "   ");
+        System.out.println(s + c.word);
+        preOrder(c.left, s + "   ");
+        preOrder(c.right, s + "   ");
+    }
+    
+    public void print(){
+        System.out.println("\nCurrent Words:");
+        inOrder(root);
+    }
+    
+    public void print(String start, String end){
+        inOrder(root, start, end);
     }
 
-    public Node find(String word) {
+    private void inOrder(Node c){
+        if (c == null) {
+            return;
+        }
+        inOrder(c.left);
+        System.out.println(c.word + ": " + c.getDefinitions());
+        inOrder(c.right);
+    }
+
+    private boolean inOrder(Node c, String startWord, String endWord){
+        if (c == null) {
+            return false;
+        }
+        inOrder(c.left, startWord, endWord);
+        if (comesBefore(c.word, startWord) && !comesBefore(c.word, endWord)) {
+            System.out.println(c.word + ": " + c.getDefinitions());
+        }   
+        inOrder(c.right, startWord, endWord);
+        return false;
+    }
+    
+    public String find(String word){
+        Node out = find(word, true);
+        return out == null ? word + " not found." : out.word + ": " + out.getDefinitions();
+    }
+
+    public Node find(String word, boolean notListing) {
         Node current = root;
+        Node parent = null;
         while (current != null && !current.word.equals(word)) {
-            if (current.word.compareTo(word) > 0) {
+            if (comesBefore(current.word, word)) {
+                parent = current;
                 current = current.left;
             }
             else{
+                parent = current;
                 current = current.right;
             }
         }
         if (current != null) {
-            splay(current);
+            if (notListing) {
+                splay(current);
+            }
+            return current;
         }
-        return current;
+        if (notListing) {
+            return null;
+        }
+        return parent; // closest word
     }
 
-    // tester for debug
-    /*
-    public static void main(String[] args) {
-        SplayTree tree = new SplayTree();
-        tree.add("f", "");
-        tree.print();
-        tree.add("c", "");
-        tree.print();
-        tree.add("d", "");
-        tree.print();
-        tree.add("a", "");
-        tree.print();
-        tree.add("b", "");
-        tree.print();
-        tree.add("e", "");
-        tree.print();
-
-        tree.remove("e");
-        tree.print();
-        tree.remove("b");
-        tree.print();
-        tree.remove("f");
-        tree.print();
-        tree.remove("c");
-        tree.print();
-        tree.remove("d");
-        tree.print();
-        tree.remove("a");
-        tree.print();
+    /**
+     * Compares the first String and the second string, determining which comes first.
+     * However, for this program, uppercase letters must show up after their lowercase equivalent rather than before as in the compareTo String method to match the order in dict1ordered.txt
+     * Additionally, in all other cases, the comparison should ignore the case of the word.
+     * 
+     * This method returns true if the first string comes first in this ordering and false if it comes after.
+     */
+    private boolean comesBefore(String first, String second){
+        int compareIgnoreCase = first.toLowerCase().compareTo(second.toLowerCase());
+        if (compareIgnoreCase == 0) {
+            int compare = first.compareTo(second);
+            compare *= -1;
+            return compare >= 0;
+        }
+        return compareIgnoreCase >= 0;
     }
-    */
 }
